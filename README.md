@@ -1,4 +1,3 @@
-## Google+ PHP Quickstart
+## Google+ Login for Wordpress
 
-The instructions for getting started are available at:
-https://developers.google.com/+/quickstart/php
+This is a Wordpress Plugin for Login with a Google+ Account to Wordpress
