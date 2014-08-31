@@ -1,0 +1,118 @@
+Userdata: WP_User Object
+(
+    [data] => stdClass Object
+        (
+            [ID] => 5
+            [user_login] => conrast@gmail.com
+            [user_pass] => $P$BMcifGA.uZs3d7QsN98GWpuexvPYoD1
+            [user_nicename] => conrastgmail-com
+            [user_email] => conrast@gmail.com
+            [user_url] => 
+            [user_registered] => 2014-08-24 16:15:26
+            [user_activation_key] => 
+            [user_status] => 0
+            [display_name] => conrast@gmail.com
+        )
+
+    [ID] => 5
+    [caps] => Array
+        (
+            [subscriber] => 1
+        )
+
+    [cap_key] => wp_capabilities
+    [roles] => Array
+        (
+            [0] => subscriber
+        )
+
+    [allcaps] => Array
+        (
+            [read] => 1
+            [level_0] => 1
+            [subscriber] => 1
+        )
+
+    [filter] => 
+)
+Plusdata: Google_Service_Plus_Person Object
+(
+    [aboutMe] => 
+    [ageRangeType:protected] => Google_Service_Plus_PersonAgeRange
+    [ageRangeDataType:protected] => 
+    [birthday] => 
+    [braggingRights] => 
+    [circledByCount] => 0
+    [coverType:protected] => Google_Service_Plus_PersonCover
+    [coverDataType:protected] => 
+    [currentLocation] => 
+    [displayName] => Stephan Conradin
+    [domain] => 
+    [emailsType:protected] => Google_Service_Plus_PersonEmails
+    [emailsDataType:protected] => array
+    [etag] => "pNz5TVTpPz2Rn5Xw8UrubkkbOJ0/Gn7qN-iHTDioP4ikKcmXiWFA_xs"
+    [gender] => male
+    [id] => 116612984117226757043
+    [imageType:protected] => Google_Service_Plus_PersonImage
+    [imageDataType:protected] => 
+    [isPlusUser] => 1
+    [kind] => plus#person
+    [language] => de
+    [nameType:protected] => Google_Service_Plus_PersonName
+    [nameDataType:protected] => 
+    [nickname] => 
+    [objectType] => person
+    [occupation] => 
+    [organizationsType:protected] => Google_Service_Plus_PersonOrganizations
+    [organizationsDataType:protected] => array
+    [placesLivedType:protected] => Google_Service_Plus_PersonPlacesLived
+    [placesLivedDataType:protected] => array
+    [plusOneCount] => 
+    [relationshipStatus] => 
+    [skills] => 
+    [tagline] => 
+    [url] => https://plus.google.com/116612984117226757043
+    [urlsType:protected] => Google_Service_Plus_PersonUrls
+    [urlsDataType:protected] => array
+    [verified] => 
+    [collection_key:protected] => items
+    [modelData:protected] => Array
+        (
+            [emails] => Array
+                (
+                    [0] => Google_Service_Plus_PersonEmails Object
+                        (
+                            [type] => account
+                            [value] => conrast@gmail.com
+                            [modelData:protected] => Array
+                                (
+                                )
+
+                            [processed:protected] => Array
+                                (
+                                )
+
+                        )
+
+                )
+
+            [name] => Array
+                (
+                    [familyName] => Conradin
+                    [givenName] => Stephan
+                )
+
+            [image] => Array
+                (
+                    [url] => https://lh3.googleusercontent.com/-XdUIqdMkCWA/AAAAAAAAAAI/AAAAAAAAAAA/4252rscbv5M/photo.jpg?sz=50
+                    [isDefault] => 1
+                )
+
+        )
+
+    [processed:protected] => Array
+        (
+            [emails] => 1
+        )
+
+)
