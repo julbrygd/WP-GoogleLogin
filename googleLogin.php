@@ -53,12 +53,12 @@ class GoogleLogin {
         wp_enqueue_script("googleLoginJs", GOOGLE_LOGIN_PLUGIN_URL . "/js/loginScript.js", array('jquery'));
     }
     
-    public function loginButton() {
+    public function loginButton($callback = "signinCallback") {
         ?>
         <span id="signinButton">
             <span
                 class="g-signin"
-                data-callback="signinCallback"
+                data-callback="<?php echo $callback ?>"
                 data-clientid="<?php echo $this->settingsObject->getOption("client_id"); ?>"
                 data-redirecturi="postmessage"
                 data-accesstype="offline"
