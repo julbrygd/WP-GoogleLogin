@@ -20,8 +20,8 @@ function signinCallback(authResult) {
                 var p = $("<p>");
                 var loginDiv = $("div#login");
                 var h1 = undefined;
-                loginDiv.children().each(function () {
-                    if($(this).prop("tagName").toLowerCase() === "h1" && h1 === undefined) {
+                loginDiv.children().each(function() {
+                    if ($(this).prop("tagName").toLowerCase() === "h1" && h1 === undefined) {
                         h1 = $(this);
                     }
                 });
@@ -32,11 +32,24 @@ function signinCallback(authResult) {
                     redir = true;
                 } else {
                     p = $("<div>");
-                    p.attr("id","login_error");
-                    p.html("Ein fehler is beim Google Login aufgetreten. <br />");
+                    p.attr("id", "login_error");
+                    if (response.msg !== undefined) {
+                        p.html(response.msg);
+                    } else {
+                        p.html("Ein fehler is beim Google Login aufgetreten. <br />");
+                    }
+                    var revokeUrl = 'https://accounts.google.com/o/oauth2/revoke?token=' +
+                            authResult['access_token'];
+                    $.ajax({
+                        type: 'GET',
+                        url: revokeUrl,
+                        async: false,
+                        contentType: "application/json",
+                        dataType: 'jsonp'
+                    });
                 }
                 h1.after(p);
-                if(redir){
+                if (redir) {
                     window.location = redirect;
                 }
             });
@@ -56,34 +69,12 @@ function connectCallback(authResult) {
         // Nach der Autorisierung des Nutzers nun die Anmeldeschaltfläche ausblenden, zum Beispiel:
         document.getElementById('signinButton').setAttribute('style', 'display: none');
         var data = {
-            'action': 'gl_login',
-            'auth': authResult['code']
+            'action': 'gl_connect',
+            'code': authResult['code']
         };
         (function($) {
             $.post(ajaxurl, data, function(response) {
-                var redirect = $("input[name='redirect_to']").val();
-                var p = $("<p>");
-                var loginDiv = $("div#login");
-                var h1 = undefined;
-                loginDiv.children().each(function () {
-                    if($(this).prop("tagName").toLowerCase() === "h1" && h1 === undefined) {
-                        h1 = $(this);
-                    }
-                });
-                var redir = false;
-                if (response.result === "ok" && response.code === authResult['code']) {
-                    p.addClass("message");
-                    p.html("Sie wurde erfolgreich mit Google angemeldet. <br />");
-                    redir = true;
-                } else {
-                    p = $("<div>");
-                    p.attr("id","login_error");
-                    p.html("Ein fehler is beim Google Login aufgetreten. <br />");
-                }
-                h1.after(p);
-                if(redir){
-                    window.location = redirect;
-                }
+                location.reload();
             });
         })(jQuery);
     } else if (authResult['error']) {

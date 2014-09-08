@@ -41,6 +41,7 @@ class GoogleLogin {
         add_action('show_user_profile', array(&$this, 'extendProfile'));
         add_action('login_enqueue_scripts', array(&$this, 'enqueueStyle'), 10);
         add_action('login_enqueue_scripts', array(&$this, 'enqueueScript'), 1);
+        add_action("admin_enqueue_scripts", array(&$this, 'enqueueScript'));
         $this->adminAjax();
         $this->settingsObject = GoogleLogin_Settings::getInstance();
     }
@@ -52,7 +53,7 @@ class GoogleLogin {
     public function enqueueScript() {
         wp_enqueue_script("googleLoginJs", GOOGLE_LOGIN_PLUGIN_URL . "/js/loginScript.js", array('jquery'));
     }
-    
+
     public function loginButton($callback = "signinCallback") {
         ?>
         <span id="signinButton">
@@ -67,14 +68,14 @@ class GoogleLogin {
                 data-scope="https://www.googleapis.com/auth/plus.login https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/calendar">
             </span>
         </span>
-<?php
+        <?php
     }
 
     public function loginForm() {
         ?>
         <p>
         <lable>Einloggen mit:</lable><br />
-            <?php $this->loginButton();?>
+        <?php $this->loginButton(); ?>
         </p>
         <?php
     }
@@ -99,6 +100,9 @@ class GoogleLogin {
     public function adminAjax() {
         add_action('wp_ajax_gl_login', array(&$this, "loginUser"));
         add_action('wp_ajax_nopriv_gl_login', array(&$this, "loginUser"));
+
+        add_action('wp_ajax_gl_connect', array(&$this, "connectUser"));
+        add_action('wp_ajax_gl_deleteMeta', array(&$this, "deleteMetaData"));
     }
 
     private function saveUserMeta($user_id, $key, $data) {
@@ -115,11 +119,10 @@ class GoogleLogin {
     }
 
     public function getGoogleClient($code = null, $access_token = null) {
-        error_log("Get googleClient -> code=" . $code . " ;token=" . $access_token);
         if ($code == null) {
             if (is_user_logged_in()) {
                 $id = get_current_user_id();
-                $data = get_user_meta($id, self::USER_META_KEY);
+                $data = get_user_meta($id, self::USER_META_DATA_KEY);
                 if (isset($data["code"])) {
                     $code = $data["code"];
                 } else {
@@ -152,6 +155,45 @@ class GoogleLogin {
         return $client;
     }
 
+    public function connectUser() {
+        if (isset($_POST["code"]) && is_user_logged_in()) {
+            $client = $this->getGoogleClient($_POST["code"]);
+            $accessToken = $client->getAccessToken();
+            $newMeta = array(
+                "code" => $_POST["code"],
+                "access_token" => $accessToken
+            );
+            $plus = new Google_Service_Plus($client);
+            $me = $plus->people->get('me');
+            $mails = $me->getEmails();
+            $mail = "";
+            if (count($mails) == 1) {
+                $mail = $mails[0]["value"];
+            } else {
+                foreach ($mails as $v) {
+                    if ($v["type"] == "account") {
+                        $mail = ["value"];
+                    }
+                }
+            }
+            $username = $me->getNickname();
+            if ($username == "") {
+                $username = $mail;
+            }
+            $googleID = $me->getId();
+            $user_id = get_current_user_id();
+            $this->saveUserMeta($user_id, self::USER_META_DATA_KEY, $newMeta);
+            $this->saveUserMeta($user_id, self::USER_META_IS_GOOGLE_KEY, true);
+            $this->saveUserMeta($user_id, self::USER_META_GOOGLE_ID, $googleID);
+            $this->saveUserMeta($user_id, self::USER_META_GOOGLE_EMAIL, $mail);
+            wp_send_json(array(
+                "code" => $authPost,
+                "result" => "ok"
+            ));
+            exit();
+        }
+    }
+
     public function loginUser() {
         if (isset($_POST["auth"])) {
             $authPost = $_POST["auth"];
@@ -182,32 +224,40 @@ class GoogleLogin {
             $usersById = get_users(
                     array(
                         "meta_key" => "googleLogin_googleId",
-                        "meta_value" => $$googleID
+                        "meta_value" => $googleID
             ));
             $user_id = null;
             if (count($usersById) == 1) {
                 $user = $usersById[0];
                 $user_id = $user->ID;
+                $username = $user->user_login;
             } else {
                 $user_id = username_exists($username);
             }
             if (!$user_id and email_exists($mail) == false) {
-                $random_password = wp_generate_password($length = 12, $include_standard_special_chars = false);
-                $user_id = wp_create_user($username, $random_password, $mail);
-                $data = get_userdata($user_id);
-                $data->display_name = $me->getDisplayName();
-                $data->first_name = $me->getName()->getGivenName();
-                $data->last_name = $me->getName()->getFamilyName();
-                wp_update_user($data);
-                $data = get_userdata($user_id);
+                if (get_option('users_can_register')) {
+                    $random_password = wp_generate_password($length = 12, $include_standard_special_chars = false);
+                    $user_id = wp_create_user($username, $random_password, $mail);
+                    $data = get_userdata($user_id);
+                    $data->display_name = $me->getDisplayName();
+                    $data->first_name = $me->getName()->getGivenName();
+                    $data->last_name = $me->getName()->getFamilyName();
+                    wp_update_user($data);
+                    $data = get_userdata($user_id);
+                } else {
+                    wp_send_json(array(
+                        "result" => "nok",
+                        "msg" => "register_not_allowd"
+                    ));
+                }
             }
             // log in automatically
             if (!is_user_logged_in()) {
-                $user = get_userdatabylogin($username);
+                $user = get_user_by('login', $username);
                 $user_id = $user->ID;
-                wp_set_current_user($user_id, $user_login);
+                wp_set_current_user($user_id, $username);
                 wp_set_auth_cookie($user_id);
-                do_action('wp_login', $user_login);
+                do_action('wp_login', $username);
                 $this->saveUserMeta($user_id, self::USER_META_DATA_KEY, $newMeta);
                 $this->saveUserMeta($user_id, self::USER_META_IS_GOOGLE_KEY, true);
                 $this->saveUserMeta($user_id, self::USER_META_GOOGLE_ID, $googleID);
@@ -223,6 +273,21 @@ class GoogleLogin {
             }
         }
         exit();
+    }
+
+    public function deleteMetaData() {
+        $user_id = get_current_user_id();
+        print_r($_POST);
+        if (is_user_logged_in() && isset($_POST["nonce"])) {
+            if (wp_verify_nonce($_POST["nonce"], "deleteGLmeta_" . $user_id)) {
+                delete_user_meta($user_id, self::USER_META_DATA_KEY);
+                delete_user_meta($user_id, self::USER_META_GOOGLE_EMAIL);
+                delete_user_meta($user_id, self::USER_META_GOOGLE_ID);
+                delete_user_meta($user_id, self::USER_META_IS_GOOGLE_KEY);
+                echo "ok";
+                exit();
+            }
+        }
     }
 
     public function isGoogleUser() {
